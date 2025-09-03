@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ user.username }} Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center bg-gray-800 px-8 py-4 shadow-md">
+    <h1 class="text-2xl font-bold text-cyan-400">{{ user.username }} Dashboard</h1>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'task_create' %}" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg shadow-md">Add Task</a>
+      <a href="{% url 'logout_confirm' %}" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">Logout</a>
+    </div>
+  </header>
+
+  <!-- Stats Section -->
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-6 px-8 py-6">
+    <div class="bg-gray-800 rounded-2xl p-6 text-center shadow-lg">
+      <h2 class="text-4xl font-extrabold text-cyan-400">{{ total_tasks }}</h2>
+      <p class="text-gray-300 mt-2">Total Tasks</p>
+    </div>
+    <div class="bg-gray-800 rounded-2xl p-6 text-center shadow-lg">
+      <h2 class="text-4xl font-extrabold text-yellow-400">{{ pending_tasks }}</h2>
+      <p class="text-gray-300 mt-2">Pending Tasks</p>
+    </div>
+    <div class="bg-gray-800 rounded-2xl p-6 text-center shadow-lg">
+      <h2 class="text-4xl font-extrabold text-green-400">{{ completed_tasks }}</h2>
+      <p class="text-gray-300 mt-2">Completed Tasks</p>
+    </div>
+  </section>
+
+  <!-- Task Tabs -->
+  <section class="px-8 py-10 flex-1">
+    <div class="flex gap-4 mb-6 flex-wrap">
+      <button onclick="showTab('all')" id="all-btn" class="px-4 py-2 bg-cyan-600 rounded-lg font-semibold hover:bg-cyan-700 transition">All Tasks</button>
+      <button onclick="showTab('pending')" id="pending-btn" class="px-4 py-2 bg-yellow-600 rounded-lg font-semibold hover:bg-yellow-700 transition">Pending Tasks</button>
+      <button onclick="showTab('completed')" id="completed-btn" class="px-4 py-2 bg-green-600 rounded-lg font-semibold hover:bg-green-700 transition">Completed Tasks</button>
+    </div>
+
+    <!-- All Tasks Table -->
+    <div id="all" class="tab-content bg-gray-800 rounded-2xl p-4 shadow-lg overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-700">
+        <thead>
+          <tr class="text-left text-gray-300">
+            <th class="px-4 py-2">Title</th>
+            <th class="px-4 py-2">Description</th>
+            <th class="px-4 py-2">Created At</th>
+            <th class="px-4 py-2">Due Date</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-300">
+          {% for task in all_tasks %}
+          <tr class="border-b border-gray-700 hover:bg-gray-700 transition">
+            <td class="px-4 py-2">{{ task.title }}</td>
+            <td class="px-4 py-2">{{ task.description|default:"No description" }}</td>
+            <td class="px-4 py-2">{{ task.created_at|date:"M d, Y H:i" }}</td>
+            <td class="px-4 py-2">{% if task.due_date %}{{ task.due_date|date:"M d, Y" }}{% else %}N/A{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-4 py-2 text-center text-gray-400">No tasks available</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pending Tasks Table -->
+    <div id="pending" class="tab-content bg-gray-800 rounded-2xl p-4 shadow-lg overflow-x-auto hidden">
+      <table class="min-w-full divide-y divide-gray-700">
+        <thead>
+          <tr class="text-left text-gray-300">
+            <th class="px-4 py-2">Title</th>
+            <th class="px-4 py-2">Description</th>
+            <th class="px-4 py-2">Created At</th>
+            <th class="px-4 py-2">Due Date</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-300">
+          {% for task in pending_list %}
+          <tr class="border-b border-gray-700 hover:bg-gray-700 transition">
+            <td class="px-4 py-2">{{ task.title }}</td>
+            <td class="px-4 py-2">{{ task.description|default:"No description" }}</td>
+            <td class="px-4 py-2">{{ task.created_at|date:"M d, Y H:i" }}</td>
+            <td class="px-4 py-2">{% if task.due_date %}{{ task.due_date|date:"M d, Y" }}{% else %}N/A{% endif %}</td>
+            <td class="px-4 py-2 text-yellow-400 font-semibold">Pending</td>
+            <td class="px-4 py-2 flex gap-2">
+              <a href="{% url 'task_update' task.id %}" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition">Update</a>
+              <a href="{% url 'task_delete' task.id %}" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded transition">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-4 py-2 text-center text-gray-400">No pending tasks</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Completed Tasks Table -->
+    <div id="completed" class="tab-content bg-gray-800 rounded-2xl p-4 shadow-lg overflow-x-auto hidden">
+      <table class="min-w-full divide-y divide-gray-700">
+        <thead>
+          <tr class="text-left text-gray-300">
+            <th class="px-4 py-2">Title</th>
+            <th class="px-4 py-2">Description</th>
+            <th class="px-4 py-2">Created At</th>
+            <th class="px-4 py-2">Due Date</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-300">
+          {% for task in completed_list %}
+          <tr class="border-b border-gray-700 hover:bg-gray-700 transition">
+            <td class="px-4 py-2">{{ task.title }}</td>
+            <td class="px-4 py-2">{{ task.description|default:"No description" }}</td>
+            <td class="px-4 py-2">{{ task.created_at|date:"M d, Y H:i" }}</td>
+            <td class="px-4 py-2">{% if task.due_date %}{{ task.due_date|date:"M d, Y" }}{% else %}N/A{% endif %}</td>
+            <td class="px-4 py-2 text-green-400 font-semibold">Complete</td>
+            <td class="px-4 py-2 flex gap-2">
+              <a href="{% url 'task_update' task.id %}" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition">Update</a>
+              <a href="{% url 'task_delete' task.id %}" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded transition">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-4 py-2 text-center text-gray-400">No completed tasks</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 py-4 text-center text-gray-400">
+    &copy; 2025 ToDoList Pro. All rights reserved.
+  </footer>
+
+  <!-- Tab Script -->
+  <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById(tab).classList.remove('hidden');
+    }
+    // Show All Tasks by default
+    showTab('all');
+  </script>
+
+</body>
+</html>
